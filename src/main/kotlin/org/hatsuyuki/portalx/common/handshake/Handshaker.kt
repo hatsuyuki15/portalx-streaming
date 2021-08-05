@@ -19,7 +19,7 @@ class Handshaker {
             throw InvalidProtocolException("Invalid protocol signature: $protocolSignature")
         }
         val config = encoder.read<Config>(clientSocket)
-        val authorizationResult = authorizer.check(config.token, config.host, config.port, config.environmentId)
+        val authorizationResult = authorizer.check(config)
         val response = when(authorizationResult) {
             Result.OK -> HandshakeResponse(HandshakeResponse.Status.OK, "")
             Result.INVALID_TOKEN -> HandshakeResponse(HandshakeResponse.Status.NotAuthenticated, "Your token is invalid. Try logout and re-login")
@@ -36,14 +36,8 @@ class Handshaker {
         return config
     }
 
-    suspend fun doHandshakeToForwarder(serverSocket: CoroutineSocket, token: String, backendAddress: Address, environment: Environment) {
+    suspend fun doHandshakeToForwarder(serverSocket: CoroutineSocket, config: Config) {
         encoder.writeProtocolSignature(serverSocket)
-        val config = Config(
-            token,
-            backendAddress.host,
-            backendAddress.port,
-            environment.id
-        )
         encoder.write(serverSocket, config)
         val response = encoder.read<HandshakeResponse>(serverSocket)
         if (response.status != HandshakeResponse.Status.OK) {
