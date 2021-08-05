@@ -1,7 +1,9 @@
 package org.hatsuyuki.portalx.common.handshake
 
+import org.hatsuyuki.portalx.common.Config
+
 interface Authorizer {
-    suspend fun check(token: String, host: String, port: Int, environmentId: Int): Result
+    suspend fun check(config: Config): Result
 
     data class Response(
         val result: Result
