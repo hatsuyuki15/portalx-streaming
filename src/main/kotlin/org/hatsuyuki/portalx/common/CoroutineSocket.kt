@@ -124,9 +124,6 @@ open class CoroutineSocket(
     }
 }
 
-suspend fun CoroutineSocket(address: Address) =
-    CoroutineSocket(address.host, address.port)
-
 suspend fun CoroutineSocket(host: String, port: Int): CoroutineSocket {
     val channel = withContext(Dispatchers.IO) {
         AsynchronousSocketChannel.open()
