@@ -13,7 +13,6 @@ class TCPTunnel(
     private val remoteSocket: CoroutineSocket,
     private val tunnelStatusListener: TunnelStatusListener
 ) {
-    private var active = false
     private val log = LogManager.getLogger()
     private val isBroken = AtomicBoolean(false)
 
@@ -30,7 +29,6 @@ class TCPTunnel(
         remoteSocket.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
         try {
             // Start forwarding data between server and client
-            active = true
             val clientForward = TCPForwarder(this, localSocket, remoteSocket)
             val serverForward = TCPForwarder(this, remoteSocket, localSocket)
             CoroutineScope(dispatcher).launch {
@@ -39,9 +37,8 @@ class TCPTunnel(
             CoroutineScope(dispatcher).launch {
                 serverForward.start()
             }
-            log.debug("TCP Forwarding: ${localSocket.localAddress} -> ${remoteSocket.remoteAddress}")
         } catch (ioe: IOException) {
-            log.error("Failed to connect to remote host")
+            log.error("Failed to connect to remote host", ioe)
             connectionBroken()
         }
     }
@@ -55,10 +52,6 @@ class TCPTunnel(
             try {
                 localSocket.close()
             } catch (e: Exception) {
-            }
-            if (active) {
-                log.debug("TCP Forwarding stopped.")
-                active = false
             }
             tunnelStatusListener.onBroken(this)
         }
