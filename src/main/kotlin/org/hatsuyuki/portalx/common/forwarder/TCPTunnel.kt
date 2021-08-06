@@ -6,6 +6,7 @@ import org.hatsuyuki.portalx.common.CoroutineSocket
 import java.io.IOException
 import java.net.StandardSocketOptions
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 class TCPTunnel(
     private val localSocket: CoroutineSocket,
@@ -14,6 +15,7 @@ class TCPTunnel(
 ) {
     private var active = false
     private val log = LogManager.getLogger()
+    private val isBroken = AtomicBoolean(false)
 
     companion object {
         private val dispatcher = Executors.newFixedThreadPool(8) {
@@ -45,18 +47,20 @@ class TCPTunnel(
     }
 
     suspend fun connectionBroken() {
-        try {
-            remoteSocket.close()
-        } catch (e: Exception) {
+        if (isBroken.compareAndSet(false, true)) {
+            try {
+                remoteSocket.close()
+            } catch (e: Exception) {
+            }
+            try {
+                localSocket.close()
+            } catch (e: Exception) {
+            }
+            if (active) {
+                log.debug("TCP Forwarding stopped.")
+                active = false
+            }
+            tunnelStatusListener.onBroken(this)
         }
-        try {
-            localSocket.close()
-        } catch (e: Exception) {
-        }
-        if (active) {
-            log.debug("TCP Forwarding stopped.")
-            active = false
-        }
-        tunnelStatusListener.onBroken(this)
     }
 }
