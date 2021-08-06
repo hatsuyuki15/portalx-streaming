@@ -7,14 +7,11 @@ import java.nio.ByteBuffer
 class TCPForwarder(
     private val parent: TCPTunnel,
     private val `is`: CoroutineSocket,
-    private val os: CoroutineSocket
+    private val os: CoroutineSocket,
+    private val bufferSize: Int
 ) {
-    companion object {
-        const val DEFAULT_BUFFER_SIZE = 8192 * 4
-    }
-
     suspend fun start() {
-        val bytes = ByteArray(DEFAULT_BUFFER_SIZE)
+        val bytes = ByteArray(bufferSize)
         val buffer = ByteBuffer.wrap(bytes)
         try {
             while(buffer.position() > 0 || `is`.readPartially(buffer) >= 0) {

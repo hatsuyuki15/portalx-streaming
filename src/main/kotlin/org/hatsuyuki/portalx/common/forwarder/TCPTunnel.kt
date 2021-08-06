@@ -11,7 +11,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 class TCPTunnel(
     private val localSocket: CoroutineSocket,
     private val remoteSocket: CoroutineSocket,
-    private val tunnelStatusListener: TunnelStatusListener
+    private val tunnelStatusListener: TunnelStatusListener,
+    private val bufferSize: Int = 8192 * 4
 ) {
     private val log = LogManager.getLogger()
     private val isBroken = AtomicBoolean(false)
@@ -29,8 +30,8 @@ class TCPTunnel(
         remoteSocket.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
         try {
             // Start forwarding data between server and client
-            val clientForward = TCPForwarder(this, localSocket, remoteSocket)
-            val serverForward = TCPForwarder(this, remoteSocket, localSocket)
+            val clientForward = TCPForwarder(this, localSocket, remoteSocket, bufferSize)
+            val serverForward = TCPForwarder(this, remoteSocket, localSocket, bufferSize)
             CoroutineScope(dispatcher).launch {
                 clientForward.start()
             }
