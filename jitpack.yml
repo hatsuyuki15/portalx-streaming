@@ -1,5 +1,5 @@
 before_install:
   - source "$HOME/.sdkman/bin/sdkman-init.sh"
   - sdk update
-  - sdk install java 8.0.302-adpt
-  - sdk use java 8.0.302-adpt
+  - sdk install java 8.0.292.hs-adpt
+  - sdk use java 8.0.292.hs-adpt
