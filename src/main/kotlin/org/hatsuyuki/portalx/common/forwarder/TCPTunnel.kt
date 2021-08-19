@@ -1,5 +1,6 @@
 package org.hatsuyuki.portalx.common.forwarder
 
+import jdk.net.ExtendedSocketOptions
 import kotlinx.coroutines.*
 import org.apache.logging.log4j.LogManager
 import org.hatsuyuki.portalx.common.CoroutineSocket
@@ -27,7 +28,10 @@ class TCPTunnel(
 
     suspend fun start() {
         localSocket.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
+        localSocket.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, 60)
+
         remoteSocket.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
+        remoteSocket.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, 60)
         try {
             // Start forwarding data between server and client
             val clientForward = TCPForwarder(this, localSocket, remoteSocket, bufferSize)
