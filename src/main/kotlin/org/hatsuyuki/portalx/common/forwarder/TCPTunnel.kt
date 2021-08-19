@@ -13,7 +13,8 @@ class TCPTunnel(
     private val localSocket: CoroutineSocket,
     private val remoteSocket: CoroutineSocket,
     private val tunnelStatusListener: TunnelStatusListener,
-    private val bufferSize: Int = 8192 * 4
+    private val bufferSize: Int = 8192 * 4,
+    private val keepAliveSeconds: Int = 60
 ) {
     private val log = LogManager.getLogger()
     private val isBroken = AtomicBoolean(false)
@@ -28,10 +29,10 @@ class TCPTunnel(
 
     suspend fun start() {
         localSocket.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
-        localSocket.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, 60)
+        localSocket.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, keepAliveSeconds)
 
         remoteSocket.setOption(StandardSocketOptions.SO_KEEPALIVE, true)
-        remoteSocket.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, 60)
+        remoteSocket.setOption(ExtendedSocketOptions.TCP_KEEPIDLE, keepAliveSeconds)
         try {
             // Start forwarding data between server and client
             val clientForward = TCPForwarder(this, localSocket, remoteSocket, bufferSize)
